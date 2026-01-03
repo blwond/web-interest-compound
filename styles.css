@@ -400,91 +400,17 @@ input[type='checkbox'] {
 }
 
 .chart-card {
-  min-height: 260px;
+  min-height: 510px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.chart-card .chart-svg {
+.chart-card .chart-canvas {
   width: 100%;
-  height: 100%;
-  flex: 1;
+  max-width: 100%;
+  height: 480px;
   display: block;
-  min-height: 220px;
-}
-
-.chart-svg .grid line {
-  stroke: #e5e7eb;
-  stroke-width: 0.25;
-}
-
-.chart-svg .axis-text {
-  font-size: 2.2px;
-  fill: #6b7280;
-}
-
-.chart-svg .line-balance {
-  fill: none;
-  stroke: #2563eb;
-  stroke-width: 1;
-}
-
-.chart-svg .line-contrib {
-  fill: none;
-  stroke: #10b981;
-  stroke-width: 1;
-  stroke-dasharray: 4 3;
-}
-
-.chart-svg .legend-text {
-  font-size: 2.2px;
-  fill: #4b5563;
-}
-
-.chart-svg .legend-dot {
-  fill: none;
-}
-
-.chart-svg .legend-balance {
-  stroke: #2563eb;
-  stroke-width: 1.2;
-}
-
-.chart-svg .legend-contrib {
-  stroke: #10b981;
-  stroke-width: 1.2;
-  stroke-dasharray: 1.55 0.55;
-}
-
-.chart-svg .tooltip-line {
-  stroke: #9ca3af;
-  stroke-width: 0.5;
-  stroke-dasharray: 3 3;
-}
-
-.chart-svg .tooltip-dot {
-  fill: #2563eb;
-  stroke: #fff;
-  stroke-width: 0.4;
-}
-.chart-svg .tooltip-dot-balance {
-  fill: #2563eb;
-}
-.chart-svg .tooltip-dot-contrib {
-  fill: #10b981;
-}
-
-.chart-svg .tooltip-box {
-  fill: #fff;
-  stroke: #e5e7eb;
-  stroke-width: 0.4;
-  rx: 1;
-}
-
-.chart-svg .tooltip-text {
-  font-size: 2.4px;
-  fill: #1f2933;
 }
 
 .chart-card--full {
@@ -593,5 +519,9 @@ input[type='checkbox'] {
 
   .table-card--wide {
     grid-column: 1;
+  }
+
+  .chart-card .chart-canvas {
+    height: 420px;
   }
 }
