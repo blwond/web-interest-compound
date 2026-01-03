@@ -6,6 +6,7 @@ import {
   watch,
   nextTick,
   onMounted,
+  onBeforeUnmount,
 } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js';
 
 const locale = 'es-ES';
@@ -30,15 +31,16 @@ const defaultForm = () => ({
   viewFrequency: 1,
 });
 
-createApp({
-  setup() {
-    const translations = ref({});
-    const form = ref(defaultForm());
-    const chartEl = ref(null);
-    const ready = ref(false);
-    const errors = ref([]);
-    const showAdvanced = ref(false);
-    const showConsent = ref(false);
+  createApp({
+    setup() {
+      const translations = ref({});
+      const form = ref(defaultForm());
+      const chartEl = ref(null);
+      let resizeObserver = null;
+      const ready = ref(false);
+      const errors = ref([]);
+      const showAdvanced = ref(false);
+      const showConsent = ref(false);
 
     const results = computed(() => projectGrowth(form.value));
 
@@ -149,86 +151,53 @@ createApp({
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const renderChart = () => {
-      if (errors.value.length) return;
-      const canvas = chartEl.value;
-      if (!canvas) return;
+      const renderChart = () => {
+        if (errors.value.length) return;
+        const canvas = chartEl.value;
+        if (!canvas) return;
 
-      const timeline = displayTimeline.value;
-      if (!timeline.length) {
-        if (chartInstance) {
-          chartInstance.destroy();
-          chartInstance = null;
+        const timeline = displayTimeline.value;
+        if (!timeline.length) {
+          if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+          }
+          return;
         }
-        return;
-      }
 
-      const labels = timeline.map((entry) => formatLabel(entry, translations.value));
-      const balances = timeline.map((item) => item.balance);
-      const contributions = timeline.map((item) => item.contributions);
+        const labels = timeline.map((entry) => formatLabel(entry, translations.value));
+        const balances = timeline.map((item) => item.balance);
+        const contributions = timeline.map((item) => item.contributions);
 
-      const legendBalanceBase =
-        resolveKey(translations.value, 'chart.series.balance') || 'Balance futuro';
-      const rateValue = coerceNumber(form.value.rate, 0);
-      const legendBalance = `${legendBalanceBase} (${rateValue.toFixed(2)}%)`;
-      const legendContrib =
-        resolveKey(translations.value, 'chart.series.contributions') || 'Aportaciones totales';
+        const legendBalanceBase =
+          resolveKey(translations.value, 'chart.series.balance') || 'Balance futuro';
+        const rateValue = coerceNumber(form.value.rate, 0);
+        const legendBalance = `${legendBalanceBase} (${rateValue.toFixed(2)}%)`;
+        const legendContrib =
+          resolveKey(translations.value, 'chart.series.contributions') || 'Aportaciones totales';
 
-      if (chartInstance) {
-        chartInstance.destroy();
-        chartInstance = null;
-      }
+        // Check context
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        if (typeof Chart === 'undefined') {
+          console.warn('Chart.js not loaded');
+          return;
+        }
 
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      if (typeof Chart === 'undefined') {
-        console.warn('Chart.js not loaded');
-        return;
-      }
+        const parentWidth = canvas.parentElement?.clientWidth || canvas.clientWidth || 800;
+        const isNarrow = parentWidth < 640;
 
-      const parentWidth = canvas.parentElement?.clientWidth || canvas.clientWidth || 800;
-      const targetHeight = Number(canvas.getAttribute('height')) || 480;
-      canvas.width = parentWidth;
-      canvas.height = targetHeight;
-
-      chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: legendBalance,
-              data: balances,
-              borderColor: '#2563eb',
-              backgroundColor: 'rgba(37, 99, 235, 0.12)',
-              tension: 0.15,
-              pointRadius: 3,
-              pointHoverRadius: 5,
-              fill: false,
-            },
-            {
-              label: legendContrib,
-              data: contributions,
-              borderColor: '#10b981',
-              backgroundColor: 'rgba(16, 185, 129, 0.12)',
-              borderDash: [6, 4],
-              tension: 0.15,
-              pointRadius: 3,
-              pointHoverRadius: 5,
-              fill: false,
-            },
-          ],
-        },
-        options: {
-          responsive: false,
+        // Common options generator based on current width
+        const getOptions = () => ({
+          responsive: true,
           maintainAspectRatio: false,
           animation: false,
           layout: {
             padding: {
-              top: 20,
-              right: 60,
-              bottom: 12,
-              left: 0,
+              top: isNarrow ? 12 : 20,
+              right: isNarrow ? 10 : 20,
+              bottom: isNarrow ? 12 : 12,
+              left: isNarrow ? 0 : 0,
             },
           },
           interaction: { mode: 'nearest', intersect: false },
@@ -236,8 +205,14 @@ createApp({
             legend: {
               display: true,
               position: 'bottom',
-              padding: 80,
-              labels: { usePointStyle: true, boxWidth: 12, boxHeight: 12, padding: 28 },
+              padding: isNarrow ? 14 : 30,
+              labels: {
+                usePointStyle: true,
+                boxWidth: isNarrow ? 10 : 12,
+                boxHeight: isNarrow ? 10 : 12,
+                padding: isNarrow ? 10 : 20,
+                font: { size: isNarrow ? 11 : 12 },
+              },
             },
             tooltip: {
               callbacks: {
@@ -258,9 +233,9 @@ createApp({
               ticks: {
                 maxRotation: 0,
                 autoSkip: true,
-                maxTicksLimit: 6,
+                maxTicksLimit: isNarrow ? 4 : 8,
                 color: '#4b5563',
-                font: { size: 12 },
+                font: { size: 11 },
               },
             },
             y: {
@@ -268,15 +243,55 @@ createApp({
               grid: { color: 'rgba(0, 0, 0, 0.04)' },
               ticks: {
                 color: '#4b5563',
-                font: { size: 12 },
+                font: { size: 11 },
                 maxTicksLimit: 6,
                 callback: (value) => currencyFormatter.format(value),
               },
             },
           },
-        },
-      });
-    };
+        });
+
+        if (chartInstance) {
+          chartInstance.data.labels = labels;
+          chartInstance.data.datasets[0].data = balances;
+          chartInstance.data.datasets[0].label = legendBalance;
+          chartInstance.data.datasets[1].data = contributions;
+          chartInstance.data.datasets[1].label = legendContrib;
+          chartInstance.options = getOptions();
+          chartInstance.update('none'); // Update without animation
+        } else {
+          chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [
+                {
+                  label: legendBalance,
+                  data: balances,
+                  borderColor: '#2563eb',
+                  backgroundColor: 'rgba(37, 99, 235, 0.12)',
+                  tension: 0.15,
+                  pointRadius: 3,
+                  pointHoverRadius: 5,
+                  fill: false,
+                },
+                {
+                  label: legendContrib,
+                  data: contributions,
+                  borderColor: '#10b981',
+                  backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                  borderDash: [6, 4],
+                  tension: 0.15,
+                  pointRadius: 3,
+                  pointHoverRadius: 5,
+                  fill: false,
+                },
+              ],
+            },
+            options: getOptions(),
+          });
+        }
+      };
 
     watch(
       () => [results.value, form.value.viewFrequency],
@@ -284,25 +299,47 @@ createApp({
       { deep: true },
     );
 
-    onMounted(async () => {
-      await loadTranslations(translations);
-      ready.value = true;
-      applyMetaTranslations(translations.value);
-      renderChart();
-      try {
-        const stored = localStorage.getItem('cookieConsent');
-        showConsent.value = stored !== 'all' && stored !== 'essential';
-      } catch (err) {
-        console.warn('Unable to read cookie consent', err);
-        showConsent.value = true;
-      }
-    });
+      onMounted(async () => {
+        await loadTranslations(translations);
+        ready.value = true;
+        applyMetaTranslations(translations.value);
+        renderChart();
+        const container = chartEl.value?.parentElement;
+        if (container && typeof ResizeObserver !== 'undefined') {
+          let resizeTimer;
+          resizeObserver = new ResizeObserver(() => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+              requestAnimationFrame(renderChart);
+            }, 100);
+          });
+          resizeObserver.observe(container);
+        }
+        try {
+          const stored = localStorage.getItem('cookieConsent');
+          showConsent.value = stored !== 'all' && stored !== 'essential';
+        } catch (err) {
+          console.warn('Unable to read cookie consent', err);
+          showConsent.value = true;
+        }
+      });
 
-    return {
-      form,
-      t,
-      results,
-      tableRows,
+      onBeforeUnmount(() => {
+        if (resizeObserver) {
+          resizeObserver.disconnect();
+          resizeObserver = null;
+        }
+        if (chartInstance) {
+          chartInstance.destroy();
+          chartInstance = null;
+        }
+      });
+
+      return {
+        form,
+        t,
+        results,
+        tableRows,
       formatCurrency,
       formatTerm,
       contributionLabel,
