@@ -100,7 +100,10 @@ createApp({
       const contributions = timeline.map((item) => item.contributions);
       const realMax = Math.max(...balances, ...contributions);
       const hasSeries = Number.isFinite(realMax) && realMax > 0 && timeline.length > 1;
-      const maxValue = Math.max(Number.isFinite(realMax) ? realMax : 0, 1);
+      const safeContribution = coerceNumber(form.value.contribution, 0);
+      const safeInitial = coerceNumber(form.value.initial, 0);
+      const baseMax = safeContribution > 0 ? realMax : Math.max(realMax, safeInitial * 10);
+      const maxValue = Math.max(Number.isFinite(baseMax) ? baseMax : 0, 1);
 
       const margin = { top: 8, right: 6, bottom: 22, left: 18 };
       const width = 120;
