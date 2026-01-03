@@ -7,43 +7,73 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="policy-page">
+    <main class="policy-page" data-page="cookies">
       <header class="policy-header">
         <div>
-          <p class="mini-label">Cookies</p>
-          <h1>Política de cookies</h1>
-          <p class="mini-lede">Qué cookies usamos, para qué y cómo gestionarlas.</p>
+          <p class="mini-label" id="cookies-label"></p>
+          <h1 id="cookies-title"></h1>
+          <p class="mini-lede" id="cookies-subtitle"></p>
         </div>
-        <a class="btn ghost" href="index.html">Volver</a>
+        <a class="btn ghost" href="index.html" id="cookies-back"></a>
       </header>
 
       <section class="policy-block">
-        <h2>1. ¿Qué son las cookies?</h2>
-        <p>Archivos pequeños que se almacenan en tu navegador y permiten el funcionamiento básico del sitio o la prestación de publicidad.</p>
+        <h2 id="cookies-what-title"></h2>
+        <p id="cookies-what-body"></p>
       </section>
 
       <section class="policy-block">
-        <h2>2. Cookies que usamos</h2>
-        <ul>
-          <li><strong>Esenciales:</strong> necesarias para cargar la web y recordar tu preferencia de consentimiento.</li>
-          <li>
-            <strong>Publicidad (AdSense):</strong> usadas por Google para mostrar y medir anuncios. Puedes saber más en
-            <a href="https://policies.google.com/technologies/ads?hl=es" target="_blank" rel="noopener">política de Google</a>.
-          </li>
-        </ul>
+        <h2 id="cookies-used-title"></h2>
+        <ul id="cookies-used-list"></ul>
       </section>
 
       <section class="policy-block">
-        <h2>3. Cómo gestionar tu consentimiento</h2>
-        <p>
-          En el banner puedes aceptar todas o rechazar (solo esenciales). También puedes borrar o bloquear cookies desde la configuración de tu navegador. Si rechazas, sólo se usarán las esenciales.
-        </p>
+        <h2 id="cookies-consent-title"></h2>
+        <p id="cookies-consent-body"></p>
       </section>
 
       <section class="policy-block">
-        <h2>4. Duración</h2>
-        <p>Las cookies esenciales duran lo necesario para la sesión o para recordar tu preferencia. Las de terceros siguen sus propios plazos.</p>
+        <h2 id="cookies-duration-title"></h2>
+        <p id="cookies-duration-body"></p>
       </section>
     </main>
+    <script>
+      (async () => {
+        const get = (obj, path) =>
+          path.split('.').reduce((acc, part) => (acc && acc[part] !== undefined ? acc[part] : null), obj);
+        try {
+          const res = await fetch('locales/es-ES.json');
+          const t = await res.json();
+          const setText = (id, key) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = get(t, key) || '';
+          };
+          const setHTML = (id, key) => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = get(t, key) || '';
+          };
+          const setList = (id, key) => {
+            const el = document.getElementById(id);
+            const items = get(t, key);
+            if (el && Array.isArray(items)) el.innerHTML = items.map((i) => `<li>${i}</li>`).join('');
+          };
+
+          setText('cookies-label', 'policy.cookiesPage.label');
+          setText('cookies-title', 'policy.cookiesPage.title');
+          setText('cookies-subtitle', 'policy.cookiesPage.subtitle');
+          setText('cookies-back', 'policy.common.back');
+          setText('cookies-what-title', 'policy.cookiesPage.what.title');
+          setHTML('cookies-what-body', 'policy.cookiesPage.what.body');
+          setText('cookies-used-title', 'policy.cookiesPage.used.title');
+          setList('cookies-used-list', 'policy.cookiesPage.used.items');
+          setText('cookies-consent-title', 'policy.cookiesPage.consent.title');
+          setHTML('cookies-consent-body', 'policy.cookiesPage.consent.body');
+          setText('cookies-duration-title', 'policy.cookiesPage.duration.title');
+          setHTML('cookies-duration-body', 'policy.cookiesPage.duration.body');
+        } catch (err) {
+          console.error('Unable to load translations', err);
+        }
+      })();
+    </script>
   </body>
 </html>
