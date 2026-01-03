@@ -112,7 +112,16 @@
   "footer": {
     "label": "Nota",
     "disclaimer": "Esta herramienta es solo informativa y no sustituye asesoramiento financiero. Ajusta tasas y aportaciones para aproximarlas a tu realidad.",
-    "meta": "Hecho para visualizar tu crecimiento."
+    "meta": "Hecho para visualizar tu crecimiento.",
+    "privacy": "Privacidad",
+    "cookies": "Cookies",
+    "legal": "Aviso legal"
+  },
+  "cookies": {
+    "title": "Usamos cookies",
+    "copy": "Solo empleamos cookies esenciales para operar el sitio y mostrar los anuncios de forma adecuada.",
+    "acceptAll": "Aceptar todas",
+    "acceptEssential": "Rechazar"
   },
   "errors": {
     "initial": "La inversión inicial es obligatoria y no puede ser negativa.",
