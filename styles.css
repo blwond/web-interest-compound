@@ -123,11 +123,29 @@ a {
   padding: 12px 14px;
   background: var(--card);
   margin-bottom: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ad-banner--article {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .ad-banner__content {
   display: grid;
   gap: 8px;
+}
+
+.ad-banner__content .adsbygoogle {
+  display: block;
+  width: 100%;
+}
+
+/* Hide the banner if the ad is empty or unfilled */
+.ad-banner:has(.adsbygoogle:empty),
+.ad-banner:has(.adsbygoogle[data-ad-status="unfilled"]) {
+  display: none;
 }
 
 .layout {
